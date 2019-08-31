@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    <link href='http://fonts.googleapis.com/css?family=PT+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/crossfilter/1.3.12/crossfilter.min.js' type='text/javascript'></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dc/3.0.0/dc.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/dc/3.0.0/dc.css"/>
+  <div style="margin-left: 10%; " id="container-fluid">
+
+  <div class="line-chart">
+  	<center><STRONG>Unit Wise Stock Value</STRONG></center>
+  </div>
+  <div id="cbox"></div>
+  </div>
+  <br>
+  <br>
+  <br>
+  <div id="container-fluid" style="margin-top: 25%;">
+  <div id="unit_wise_sunburst_chart" style="margin-left: 15%; ">
+  	<center><STRONG>Unit Wise Stock Value</STRONG></center>
+  </div>
+
+  <div id="category_wise_sunburst_chart" style=" margin-left: 20%;">
+  	<center><strong>Category Wise Stock Value</strong></center>
+  </div>
+  </div>
+  <br>
+  <br><br>
+  <div class="container" style="margin-top: 25%; margin-left: 10%;">
+  <div id="month_wise_stock_book_bar_chart">
+  	<center style="margin-bottom: 10px;"><strong>Month Wise Stock and Book Value</strong></center>
+  </div>
+  </div>
+
+  <div style="margin-left: 10%; " class="container-fluid">
+  <div id="stone_family_bar_chart">
+  	<center><strong>Stone Family</strong></center>
+  </div>
+  </div>
+
+  <div style="margin-left: 10%; " class="container-fluid">
+  <div id="stage_bar_chart">
+  	<center><strong>Stage</strong></center>
+    <span class="display-qux"></span>
+  </div>
+  </div>
+  <br><br><br>
+    <script type="text/javascript">
+      var unit_wise_sunburst = dc.sunburstChart("#unit_wise_sunburst_chart");
+      var category_wise_sunburst = dc.sunburstChart("#category_wise_sunburst_chart");
+      var month_wise_stock_book_bar = dc.barChart("#month_wise_stock_book_bar_chart");
+      var stone_family_bar = dc.barChart("#stone_family_bar_chart");
+      var stage_bar = dc.barChart("#stage_bar_chart");
+      // var subunit_table = dc.dataTable(".dc-data-table");
+      var clusterChart = dc.lineChart(".line-chart");
+      var option_box = dc.cboxMenu('#cbox');
+
+
+      var filteredData = {};
+      var queryFilter = {};
+
+      window.filter = function(filters) {
+        filters.forEach(function(d, i) { charts[i].filter(d); });
+        renderAll();
+      };
+      window.reset = function(i) {
+        charts[i].filter(null);
+        renderAll();
+      };
+
+      var refresh = function(queryFilter){
+        d3.json("/se?filter="+JSON.stringify(queryFilter), function(d){
+          filteredData = d;
+          dc.redrawAll();
+          //init();
+        });
+      };
+
+
+      var location_dim = {
+        filter: function(f){
+          if(f){
+            queryFilter["location_dim"]=f;
+            refresh(queryFilter);
+          }
+        },
+        filterAll: function(){
+        }
+      };
+
+      var location_dim_group = {
+         all: function(){
+
+          return filteredData["location_dim_group"].values;
+         },
+         order: function(){
+         },
+         top: function(){
+         }
+      };
+
+      //Buttons for selecting Location
+      option_box
+        .dimension(location_dim)
+        .group(location_dim_group)
+        .controlsUseVisibility(true);
+      option_box.filterHandler(function(dimension, filters){
+          if(filters)
+              dimension.filter(filters);
+          else
+              dimension.filter(null);
+          return filters;
+        });
+
+
+      var unit_dim = {
+        filter: function(f){
+          if (f){
+          queryFilter["unit_dim"]=f;
+          refresh(queryFilter);
+        }
+      },
+        filterAll:function(){
+        }
+      };
+
+      var unit_dim_group = {
+        all: function(){
+
+          return filteredData["unit_dim_group"].values;
+        },
+        order:function(){
+        },
+        top: function(){
+        }
+      };
+      // Sunburst chart Unit Wise
+      unit_wise_sunburst
+      .width(300)
+      .height(300)
+      .innerRadius(50)
+      .renderLabel(false)
+      .transitionDuration(1500)
+      .dimension(unit_dim)
+      .group(unit_dim_group);
+      unit_wise_sunburst.filterHandler(function(dimension, filters){
+          if(filters)
+              dimension.filter(filters);
+          else
+              dimension.filter(null);
+          return filters;
+        });
+
+      var category_dim = {
+        filter: function(f){
+          if(f){
+            queryFilter["category_dim"]=f;
+            refresh(queryFilter);
+          }
+        },
+        filterAll:function(){
+        }
+      };
+
+      var category_dim_group = {
+        all: function(){
+
+          return filteredData["category_dim_group"].values;
+        },
+        order:function(){
+        },
+        top: function(){
+        }
+      };
+      // Sunburst chart Category Wise
+      category_wise_sunburst
+      .width(300)
+      .height(300)
+      .innerRadius(50)
+      .renderLabel(false)
+      .transitionDuration(1500)
+      .dimension(category_dim)
+      .group(category_dim_group);
+      category_wise_sunburst.filterHandler(function(dimension, filters){
+          if(filters)
+              dimension.filter(filters);
+          else
+              dimension.filter(null);
+          return filters;
+        });
+
+      var month_dim_line = {
+        filter:function(f){
+          if(f){
+            queryFilter["month_dim_line"]=f;
+            refresh(queryFilter);
+          }
+        },
+        filterAll:function(){
+        }
+      };
+
+      var month_dim_line_group_stock = {
+        all:function(){
+
+          return filteredData["month_dim_line_group_stock"].values;
+        },
+        order: function(){
+        },
+        top: function(){
+        }
+      };
+
+      var month_dim_line_group_book = {
+        all:function(){
+
+          return filteredData["month_dim_line_group_book"].values;
+        },
+        order: function(){
+        },
+        top: function(){
+        }
+      };
+
+      var month_dim_line_group_devaluation = {
+        all:function(){
+
+          return filteredData["month_dim_line_group_devaluation"].values;
+        },
+        order: function(){
+        },
+        top: function(){
+        }
+      };
+      // [Line Chart](https://github.com/dc-js/dc.js/blob/master/web/docs/api-latest.md#line-chart)
+      clusterChart /* dc.lineChart('#monthly-move-chart', 'chartGroup') */
+        .renderArea(true)
+        .width(1050)
+        .height(290)
+        .transitionDuration(1000)
+        .margins({top: 30, right: 50, bottom: 25, left: 80})
+        .dimension(month_dim_line)
+        .mouseZoomable(true)
+      .x(d3.scaleBand())
+      .xUnits(dc.units.ordinal)
+        .elasticY(true)
+        .yAxisLabel("stock_value")
+        .renderHorizontalGridLines(true)
+        .legend(dc.legend().x(800).y(10).itemHeight(13).gap(5))
+        .brushOn(false)
+        // Add the base layer of the stack with group. The second parameter specifies a series name for use in the
+        // legend.
+        // The `.valueAccessor` will be used for the base layer
+        .group(month_dim_line_group_stock, 'stock_value')
+        .stack(month_dim_line_group_book, 'Book Value',
+          function(d){
+            return d.value;
+          })
+        .stack(month_dim_line_group_devaluation, 'Devaluation Value',
+          function(d){
+            return d.value;
+          });
+          clusterChart.filterHandler(function(dimension, filters){
+              if(filters)
+                  dimension.filter(filters);
+              else
+                  dimension.filter(null);
+              return filters;
+            });
+
+      var time_month_dim = {
+        filter:function(f){
+          if(f){
+            queryFilter["time_month_dim"]=f;
+            refresh(queryFilter);
+          }
+        },
+        filterAll:function(){
+        }
+      };
+
+      var time_month_group_stock = {
+        all:function(){
+
+          return filteredData["time_month_group_stock"].values;
+        },
+        order: function(){
+        },
+        top:function(){
+        }
+      };
+      //Stone Name wise Bar Chart
+      month_wise_stock_book_bar
+      .height(290)
+      .width(1050)
+      .margins({ top: 10, left: 50, right: 50, bottom: 150 })
+      .dimension(time_month_dim)
+      .group(time_month_group_stock, 'Stock Value(In Cr.)')
+      .centerBar(false)
+      .gap(1)
+      .yAxisLabel("Stock Value")
+      .ordinalColors(["#d7191c","#fdae61","#ffffbf","#abdda4","#2b83ba","#d53e4f","#fc8d59","#fee08b","#e6f598","#99d594","#3288bd","#d53e4f","#fc8d59","#fee08b","#ffffbf","#e6f598","#99d594","#3288bd","#d53e4f","#f46d43","#fdae61","#fee08b","#e6f598","#abdda4","#66c2a5","#3288bd","#d53e4f","#f46d43","#fdae61","#fee08b","#ffffbf","#e6f598","#abdda4","#66c2a5","#3288bd","#9e0142","#d53e4f","#f46d43","#fdae61","#fee08b","#e6f598","#abdda4","#66c2a5","#3288bd","#5e4fa2"])
+      .x(d3.scaleBand())
+        .legend(dc.legend().x(895).y(10).itemHeight(13).gap(5))
+
+      .xUnits(dc.units.ordinal)
+      .elasticY(true)
+      .renderlet(function (chart){
+                  chart.selectAll("g.x text")
+                    .attr('dx', '-50')
+                    .attr('transform', "rotate(-70)");
+              });
+      month_wise_stock_book_bar.filterHandler(function(dimension, filters){
+          if(filters)
+              dimension.filter(filters);
+          else
+              dimension.filter(null);
+          return filters;
+        });
+
+      var stone_family_dim = {
+        filter: function(f){
+          if (f){
+            queryFilter["stone_family_dim"]=f;
+            refresh(queryFilter);
+          }
+        },
+        filterAll:function(){
+        }
+      };
+
+      var stone_family_group = {
+        all: function(){
+
+          return filteredData["stone_family_group"].values;
+        },
+        order:function(){
+        },
+        top:function(){
+        }
+      };
+
+      // Stone Name wise Bar Chart
+      stone_family_bar
+      .height(290)
+      .width(1050)
+      .margins({ top: 10, left: 100, right: 0, bottom: 150 })
+      .dimension(stone_family_dim)
+      .group(stone_family_group)
+      .centerBar(false)
+      .gap(1)
+      .yAxisLabel("Stock Value")
+      // .colorAccessor(function(d,i) { return i; })
+      .ordinalColors(["#d7191c","#fdae61","#ffffbf","#abdda4","#2b83ba","#d53e4f","#fc8d59","#fee08b","#e6f598","#99d594","#3288bd","#d53e4f","#fc8d59","#fee08b","#ffffbf","#e6f598","#99d594","#3288bd","#d53e4f","#f46d43","#fdae61","#fee08b","#e6f598","#abdda4","#66c2a5","#3288bd","#d53e4f","#f46d43","#fdae61","#fee08b","#ffffbf","#e6f598","#abdda4","#66c2a5","#3288bd","#9e0142","#d53e4f","#f46d43","#fdae61","#fee08b","#e6f598","#abdda4","#66c2a5","#3288bd","#5e4fa2"])
+      .x(d3.scaleBand())
+        .colorAccessor(function(d,i) { return i; })
+      .xUnits(dc.units.ordinal)
+      .elasticY(true)
+      .renderlet(function (chart) {
+                  chart.selectAll("g.x text")
+                    .attr('dx', '-50')
+                    .attr('transform', "rotate(-70)");
+              });
+      stone_family_bar.filterHandler(function(dimension, filters){
+          if(filters)
+              dimension.filter(filters);
+          else
+              dimension.filter(null);
+          return filters;
+        });
+
+      var stage_dim = {
+        filter:function(f){
+          if(f){
+            queryFilter["stage_dim"]=f;
+            refresh(queryFilter);
+          }
+        },
+        filterAll:function(){
+        }
+      };
+
+      var stage_group = {
+        all:function(){
+          return filteredData["stage_group"].values;
+        },
+        order:function(){
+        },
+        top:function(){
+        }
+      };
+      //Stage wise Bar Chart
+      stage_bar
+      .height(290)
+      .width(1050)
+      .margins({ top: 10, left: 90, right: 0, bottom: 150 })
+      .dimension(stage_dim)
+      .group(stage_group, 'Stock Value')
+      .centerBar(false)
+      .gap(1)
+      .ordering(function(d) { return -d.value; })
+
+      .yAxisLabel("Stock Value")
+        .colorAccessor(function(d,i) { return i; })
+      .ordinalColors(["#d7191c","#fdae61","#ffffbf","#abdda4","#2b83ba","#d53e4f","#fc8d59","#fee08b","#e6f598","#99d594","#3288bd","#d53e4f","#fc8d59","#fee08b","#ffffbf","#e6f598","#99d594","#3288bd","#d53e4f","#f46d43","#fdae61","#fee08b","#e6f598","#abdda4","#66c2a5","#3288bd","#d53e4f","#f46d43","#fdae61","#fee08b","#ffffbf","#e6f598","#abdda4","#66c2a5","#3288bd","#9e0142","#d53e4f","#f46d43","#fdae61","#fee08b","#e6f598","#abdda4","#66c2a5","#3288bd","#5e4fa2"])
+      .x(d3.scaleBand())
+      .xUnits(dc.units.ordinal)
+      .elasticY(true)
+      .renderlet(function (chart) {
+                  chart.selectAll("g.x text")
+                    .attr('dx', '-50')
+                    .attr('transform', "rotate(-70)");
+              });
+      stage_bar.filterHandler(function(dimension, filters){
+          if(filters)
+              dimension.filter(filters);
+          else
+              dimension.filter(null);
+          return filters;
+        });
+
+      // var subunit_table_dim = {
+      //   filter:function(){
+      //     if(f){
+      //       queryFilter["subunit_table_dim"]=f;
+      //       refresh(queryFilter);
+      //     }
+      //   },
+      //   filterAll:function(){
+      //   }
+      // };
+      // var subunit_table_group = {
+      //   all:function(){
+      //     return filteredData["subunit_table_group"].values;
+      //   },
+      //   order:function(){
+      //   },
+      //   top:function(){
+      //   }
+      // };
+      // subunit_table /* dc.dataTable('.dc-data-table', 'chartGroup') */
+      //   .dimension(subunit_table_group)
+      //   .group(function(d){
+      //     console.log(d);
+      //     return "";
+      //   })
+      //   // (_optional_) custom renderlet to post-process chart using [D3](http://d3js.org)
+      //   .columns([
+      //     function(d) { return d.value.subunit; },
+      //     function(d) { return d.value.stock_value.toFixed(2); },
+      //     function(d) { return d.value.book_value.toFixed(2); }
+      //     ])
+      //   .size(Infinity)
+      //   // (_optional_) sort order, `default = d3.ascending`
+      //   .order(d3.ascending);
+
+      // var pageStart = 0;
+      // var pageEntries = 11;
+      // pageUpdate();
+
+
+      function init(){
+        d3.json("/se?filter={}", function(d){
+          filteredData = d;
+          console.log(d);
+          dc.renderAll();
+          //init();
+        });
+      };
+
+      init();
+
+    </script>
+  </body>
+</html>
